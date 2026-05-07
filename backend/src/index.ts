@@ -4,8 +4,10 @@ import { clerkMiddleware } from '@clerk/express';
 import { clerkWebhookHandler } from './webhooks/clerk.js';
 import 'dotenv/config';
 import { getEnv } from './lib/env.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const env =getEnv();
+const env = getEnv();
 const app = express();
 
 const rawJson = express.raw({ type: 'application/json', limit: "1mb" });
@@ -18,6 +20,23 @@ app.use(express.json());
 app.use(cors());
 app.use(clerkMiddleware());
 
+const publicDir = path.join(process.cwd(), 'public');
+if (fs.existsSync(publicDir)) {
+    app.use(express.static(publicDir));
+    app.get('*', (req, res, next) => {
+        if (req.method != 'GET' && req.method != 'HEAD') {
+            return next();
+        }
+        if (req.path.startsWith('/api') || req.path.startsWith('/webhooks')) {
+            return next();
+        }
+        res.sendFile(path.join(publicDir, 'index.html'), err => {
+            if (err) {
+                next(err);
+            }
+        });
+    })
+}
 
 app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);

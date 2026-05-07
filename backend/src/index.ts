@@ -7,6 +7,9 @@ import { getEnv } from './lib/env.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import job from './lib/cron.js';
+import meRouter from './routes/meRouter.js';
+import productRouter from './routes/productRouter.js';
+import streamRouter from './routes/streamRouter.js';
 
 const env = getEnv();
 const app = express();
@@ -26,6 +29,10 @@ app.get('/health', (_req, res) => {
         ok: true
     });
 })
+
+app.use('/api/me', meRouter);
+app.use('/api/products', productRouter);
+app.use('/api/stream', streamRouter);
 
 const publicDir = path.join(process.cwd(), 'public');
 if (fs.existsSync(publicDir)) {
@@ -47,7 +54,7 @@ if (fs.existsSync(publicDir)) {
 
 app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);
-    if(env.NODE_ENV === 'production') {
+    if (env.NODE_ENV === 'production') {
         job.start();
     }
 });

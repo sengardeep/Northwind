@@ -13,6 +13,8 @@ import streamRouter from './routes/streamRouter.js';
 import { polarWebhookHandler } from './webhooks/polar.js';
 import * as Sentry from '@sentry/node';
 import { sentryClerkUserMiddleware } from './middleware/sentryClerkUser.js';
+import checkoutRouter from './routes/checkoutRouter.js';
+import adminRouter from './routes/adminRouter.js';
 
 const env = getEnv();
 const app = express();
@@ -40,7 +42,8 @@ app.get('/health', (_req, res) => {
 app.use('/api/me', meRouter);
 app.use('/api/products', productRouter);
 app.use('/api/stream', streamRouter);
-
+app.use('/api/checkout',checkoutRouter);
+app.use('/api/admin',adminRouter);
 
 const publicDir = path.join(process.cwd(), 'public');
 if (fs.existsSync(publicDir)) {
@@ -61,7 +64,7 @@ if (fs.existsSync(publicDir)) {
 }
 
 Sentry.setupExpressErrorHandler(app);
-const errorHandler: express.ErrorRequestHandler = (err, req, res, next) => {
+const errorHandler: express.ErrorRequestHandler = (_err, _req, res, _next) => {
     const sentryId = (res as express.Response & { sentry?: string }).sentry;
 
     res.status(500).json({

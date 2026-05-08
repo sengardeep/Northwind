@@ -11,6 +11,8 @@ import meRouter from './routes/meRouter.js';
 import productRouter from './routes/productRouter.js';
 import streamRouter from './routes/streamRouter.js';
 import { polarWebhookHandler } from './webhooks/polar.js';
+import * as Sentry from '@sentry/node';
+import { sentryClerkUserMiddleware } from './middleware/sentryClerkUser.js';
 
 const env = getEnv();
 const app = express();
@@ -27,6 +29,7 @@ app.post('/webhooks/polar', rawJson, (req, res) => {
 app.use(express.json());
 app.use(cors());
 app.use(clerkMiddleware());
+app.use(sentryClerkUserMiddleware);
 
 app.get('/health', (_req, res) => {
     res.json({
@@ -56,6 +59,17 @@ if (fs.existsSync(publicDir)) {
         });
     })
 }
+
+Sentry.setupExpressErrorHandler(app);
+const errorHandler: express.ErrorRequestHandler = (err, req, res, next) => {
+    const sentryId = (res as express.Response & { sentry?: string }).sentry;
+
+    res.status(500).json({
+        error: 'Internal Server Error',
+        ...(sentryId ? { sentryId } : {}),
+    });
+};
+app.use(errorHandler);
 
 app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);

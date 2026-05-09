@@ -1,19 +1,17 @@
-import './App.css'
-import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
+import { useAuth } from "@clerk/react"
+import PageLoader from "./components/PageLoader";
 
-function App() {
+const App = ()=>{
+  const {isLoaded} = useAuth();
+
+  if(!isLoaded) return <PageLoader/>
   return (
-    <>
-      <header>
-        <Show when="signed-out">
-          <SignInButton mode='modal'/>
-          <SignUpButton mode='modal'/>
-        </Show>
-        <Show when="signed-in">
-          <UserButton />
-        </Show>
-      </header>
-    </>
+    <div>
+      <p className="text-4xl text-red-400 font-sans"> Hello </p>
+      <button className="btn btn-primary">Click me</button>
+      <button className="btn btn-secondary">Click me</button>
+      <button className="btn btn-accent">Click me</button>
+    </div>
   )
 }
 
